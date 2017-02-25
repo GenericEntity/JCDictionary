@@ -27,6 +27,7 @@ typedef struct JCHashMapKeyValuePair {
 typedef struct JCHashMap {
     List *buckets[4];
     int(*hashFn)(char);
+    bool isEndOfWord;
 } HashMap;
 
 int _JCHM_GetHashCode(char c) {
@@ -44,6 +45,8 @@ int _JCHM_GetIndex(const HashMap *map, char key) {
 bool JCHM_Add(HashMap *map, char key, HashMap *value) {
     assert(map);
     
+    if (JCHM_Contains(map, key)) { return false; }
+
     KeyValuePair *kvp = (KeyValuePair*)malloc(sizeof(KeyValuePair) * 1);
     if (kvp == NULL) { return false; }
     kvp->key = key;
@@ -69,6 +72,8 @@ HashMap* JCHM_Construct(void) {
 
     // Initialize hash function
     map->hashFn = _JCHM_GetHashCode;
+    // By default, not end of word
+    map->isEndOfWord = false;
 
 	// Create buckets
 	int i;
@@ -95,6 +100,7 @@ bool JCHM_Contains(const HashMap *map, char key) {
 }
 
 void JCHM_Destruct(HashMap *map) {
+    assert(map);
     JCHM_Clear(map);
 
 	// Destroy all buckets
@@ -127,6 +133,16 @@ int JCHM_GetCount(const HashMap *map) {
     }
 
     return count;
+}
+
+bool JCHM_IsEndOfWord(const HashMap *map) {
+    assert(map);
+    return map->isEndOfWord;
+}
+
+void JCHM_SetIsEndOfWord(HashMap *map, bool isEndOfWord) {
+    assert(map);
+    map->isEndOfWord = isEndOfWord;
 }
 
 bool JCHM_Remove(HashMap *map, char key) {
@@ -192,6 +208,7 @@ bool JCLL_ContainsKey(const List *list, char key) {
 }
 
 void JCLL_Destruct(List *list) {
+    assert(list);
     JCLL_Clear(list);
     free(list);
 }
@@ -302,4 +319,3 @@ void JCLL_Foreach(const List *list, void(*action)(KeyValuePair *item)) {
     }
 }
 
-#undef T

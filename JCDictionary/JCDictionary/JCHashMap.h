@@ -17,5 +17,9 @@ HashMap *JCHM_Get(const HashMap *map, char key);
 
 int JCHM_GetCount(const HashMap *map);
 
+bool JCHM_IsEndOfWord(const HashMap *map);
+
+void JCHM_SetIsEndOfWord(HashMap *map, bool isEndOfWord);
+
 bool JCHM_Remove(HashMap *map, char key);
 

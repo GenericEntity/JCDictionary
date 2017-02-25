@@ -19,10 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="JCDictionary.c" />
     <ClCompile Include="JCHashMap.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="JCDictionary.h" />
     <ClInclude Include="JCHashMap.h" />
     <ClInclude Include="MemoryLeak.h" />
   </ItemGroup>

@@ -21,6 +21,9 @@
     <ClCompile Include="JCHashMap.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="JCDictionary.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MemoryLeak.h">
@@ -28,6 +31,9 @@
     </ClInclude>
     <ClInclude Include="JCHashMap.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="JCDictionary.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
