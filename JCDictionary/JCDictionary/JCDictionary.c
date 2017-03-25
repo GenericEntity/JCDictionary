@@ -5,39 +5,10 @@
 #include <assert.h>
 #include <string.h>
 
-typedef struct JCDDynamicArray DynArray;
-
-DynArray* JCDDA_ConstructDefault();
-
-DynArray* JCDDA_Construct1(int capacity);
-
-DynArray* JCDDA_Construct2(int capacity, double growthRate);
-
-DynArray* JCDDA_Construct3(int capacity, double growthRate,
-                           double shrinkPercThreshold);
-
-DynArray* JCDDA_Construct4(int capacity, double growthRate,
-                           double shrinkPercThreshold,
-                           double shrinkPercentage);
-
-void JCDDA_Destruct(DynArray *this);
-
-HashMap** JCDDA_GetArray(const DynArray *this);
-
-int JCDDA_GetSize(const DynArray *this);
-
-bool JCDDA_SetSize(DynArray *this, int size);
-
-bool JCDDA_IncrSize(DynArray *this, int amt);
-
-bool JCDDA_DecrSize(DynArray *this, int amt);
-
-
 
 typedef struct JCDictionary {
     HashMap *head;
     int wordCount;
-    //DynArray *nodes;
 } Dictionary;
 
 Dictionary* JCD_Construct(void) {
@@ -50,13 +21,6 @@ Dictionary* JCD_Construct(void) {
         return NULL;
     }
 
-    //dict->nodes = JCDDA_ConstructDefault();
-    //if (dict->nodes == NULL) {
-    //    free(dict->head);
-    //    free(dict);
-    //    return NULL;
-    //}
-
     dict->wordCount = 0;
 
     return dict;
@@ -64,27 +28,13 @@ Dictionary* JCD_Construct(void) {
 
 void JCD_Clear(Dictionary *this) {
     assert(this);
-
-    //HashMap **allNodes = JCDDA_GetArray(this->nodes);
-    //int nodeCount = JCDDA_GetSize(this->nodes);
-
-    //int count = 0;
-    //HashMap *node = this->head;
-
-    //while (true) {
-
-    //    allNodes[count++] = node;
-    //}
-
-
-    JCHM_Destruct(this->head);
-
+    JCHM_ClearAndDestructItems(this->head);
     this->wordCount = 0;
 }
 
 void JCD_Destruct(Dictionary *this) {
     assert(this);
-    JCD_Clear(this);
+    JCHM_DestructWithItems(this->head);
     free(this);
 }
 
@@ -106,7 +56,17 @@ bool JCD_AddWord(Dictionary *this, const char *word) {
     }
 
     assert(numToAdd >= 0);
-    if (numToAdd == 0) { return false; }
+
+    // If all letters of the new word already exist...
+    if (numToAdd == 0) {
+        // It's new if the last node is not marked as the end.
+        bool isNewWord = !JCHM_IsEndOfWord(node);
+        if (isNewWord) {
+            JCHM_SetIsEndOfWord(node, true);
+        }
+        // Report if the new word was added successfully.
+        return isNewWord;
+    }
 
     // This array of HashMap* is used to track allocated nodes in case
     // we need to abort the operation and free the allocated stuff.
@@ -142,10 +102,6 @@ bool JCD_AddWord(Dictionary *this, const char *word) {
         ch++;
     }
 
-    //if (successful && !JCDDA_IncrSize(this->nodes, numToAdd)) {
-    //    successful = false;
-    //}
-
     if (successful) {
         JCHM_SetIsEndOfWord(node, true);
         this->wordCount++;
@@ -162,7 +118,7 @@ bool JCD_AddWord(Dictionary *this, const char *word) {
     return successful;
 }
 
-bool JCD_RemoveWord(Dictionary *this, char *word) {
+bool JCD_RemoveWord(Dictionary *this, const char *word) {
     assert(this);
     assert(word);
 
@@ -170,11 +126,24 @@ bool JCD_RemoveWord(Dictionary *this, char *word) {
     return false;
 }
 
-bool JCD_ContainsWord(const Dictionary *this, char *word) {
+bool JCD_ContainsWord(const Dictionary *this, const char *word) {
     assert(this);
     assert(word);
 
-    return false;
+    const char *c = word;
+    HashMap *node = this->head;
+
+    // Traverse down the hashmap tree, checking that there is a node
+    // for each char in word.
+    while (*c != '\0') {
+        node = JCHM_Get(node, *c);
+        if (node == NULL) { return false; }
+        c++;
+    }
+
+    // If there's a corresponding node for all letters, then the final
+    // node must be marked the end of a word.
+    return JCHM_IsEndOfWord(node);
 }
 
 int JCD_GetCount(const Dictionary *this) {
@@ -184,123 +153,151 @@ int JCD_GetCount(const Dictionary *this) {
 
 
 
-typedef struct JCDDynamicArray {
-    HashMap **values;
-    int size;
-    int capacity;
-    double growthRate;
-    double shrinkPT;
-    double shrinkPerc;
-} DynArray;
+//typedef struct JCDDynamicArray DynArray;
+//
+//DynArray* JCDDA_ConstructDefault();
+//
+//DynArray* JCDDA_Construct1(int capacity);
+//
+//DynArray* JCDDA_Construct2(int capacity, double growthRate);
+//
+//DynArray* JCDDA_Construct3(int capacity, double growthRate,
+//                           double shrinkPercThreshold);
+//
+//DynArray* JCDDA_Construct4(int capacity, double growthRate,
+//                           double shrinkPercThreshold,
+//                           double shrinkPercentage);
+//
+//void JCDDA_Destruct(DynArray *this);
+//
+//HashMap** JCDDA_GetArray(const DynArray *this);
+//
+//int JCDDA_GetSize(const DynArray *this);
+//
+//bool JCDDA_SetSize(DynArray *this, int size);
+//
+//bool JCDDA_IncrSize(DynArray *this, int amt);
+//
+//bool JCDDA_DecrSize(DynArray *this, int amt);
 
-DynArray* JCDDA_ConstructDefault() {
-    return JCDDA_Construct4(4, 1.5, 0.0, 0.5);
-}
 
-DynArray* JCDDA_Construct1(int capacity) {
-    return JCDDA_Construct4(capacity, 1.5, 0.0, 0.5);
-}
-
-DynArray* JCDDA_Construct2(int capacity, double growthRate) {
-    return JCDDA_Construct4(capacity, growthRate, 0.0, 0.5);
-}
-
-DynArray* JCDDA_Construct3(int capacity, double growthRate, 
-                           double shrinkPercThreshold) {
-    return JCDDA_Construct4(capacity, 
-                           growthRate, 
-                           shrinkPercThreshold, 
-                           shrinkPercThreshold);
-}
-
-DynArray* JCDDA_Construct4(int capacity, double growthRate, 
-                           double shrinkPercThreshold, 
-                           double shrinkPercentage) {
-    assert(capacity >= 0);
-    assert(growthRate >= 1.0);
-    assert(shrinkPercThreshold >= 0.0 && shrinkPercThreshold <= 1.0);
-    assert(shrinkPercentage >= 0.0 && shrinkPercentage <= 1.0 &&
-           shrinkPercentage >= shrinkPercThreshold);
-
-    DynArray *this = (DynArray*)malloc(sizeof(DynArray) * 1);
-    if (this == NULL) { return NULL; }
-
-    if (capacity == 0) {
-        this->values = NULL;
-    } else {
-        this->values = (HashMap**)malloc(sizeof(HashMap*) * capacity);
-        if (this->values == NULL) {
-            free(this);
-            return NULL;
-        }
-    }
-
-    this->size = 0;
-    this->capacity = capacity;
-    this->growthRate = growthRate;
-    this->shrinkPT = shrinkPercThreshold;
-    this->shrinkPerc = shrinkPercentage;
-
-    return this;
-}
-
-void JCDDA_Destruct(DynArray *this) {
-    assert(this);
-    free(this->values);
-    free(this);
-}
-
-HashMap** JCDDA_GetArray(const DynArray *this) {
-    assert(this);
-    return this->values;
-}
-
-int JCDDA_GetSize(const DynArray *this) {
-    assert(this);
-    return this->size;
-}
-
-bool JCDDA_SetSize(DynArray *this, int size) {
-    assert(this);
-    assert(size >= 0);
-
-    if (size > this->capacity) {
-        // Try to expand
-        int newCapacity = (int)(this->capacity * this->growthRate);
-        if (newCapacity == this->capacity) { newCapacity = this->capacity + 1; }
-
-        HashMap **newArray = (HashMap**) realloc(
-            this->values, sizeof(HashMap*) * newCapacity);
-
-        if (newArray == NULL) { return false; }
-
-        this->capacity = newCapacity;
-        this->values = newArray;
-    } else if (size < (int)(this->capacity * this->shrinkPT)) {
-        // Try to contract if the new size is less than threshold of capacity
-        // It's okay if it (somehow) fails to shrink, we can still use it.
-        int newCapacity = (int)(this->capacity * this->shrinkPT);
-        HashMap **newArray = (HashMap**) realloc(
-            this->values, sizeof(HashMap*) * newCapacity);
-
-        if (newArray != NULL) {
-            this->capacity = newCapacity;
-            this->values = newArray;
-        }
-    }
-
-    this->size = size;
-
-    return true;
-}
-
-bool JCDDA_IncrSize(DynArray *this, int amt) {
-    assert(this);
-    return JCDDA_SetSize(this, this->size + amt);
-}
-
-bool JCDDA_DecrSize(DynArray *this, int amt) {
-    assert(this);
-    return JCDDA_SetSize(this, this->size - amt);
-}
+//typedef struct JCDDynamicArray {
+//    HashMap **values;
+//    int size;
+//    int capacity;
+//    double growthRate;
+//    double shrinkPT;
+//    double shrinkPerc;
+//} DynArray;
+//
+//DynArray* JCDDA_ConstructDefault() {
+//    return JCDDA_Construct4(4, 1.5, 0.0, 0.5);
+//}
+//
+//DynArray* JCDDA_Construct1(int capacity) {
+//    return JCDDA_Construct4(capacity, 1.5, 0.0, 0.5);
+//}
+//
+//DynArray* JCDDA_Construct2(int capacity, double growthRate) {
+//    return JCDDA_Construct4(capacity, growthRate, 0.0, 0.5);
+//}
+//
+//DynArray* JCDDA_Construct3(int capacity, double growthRate, 
+//                           double shrinkPercThreshold) {
+//    return JCDDA_Construct4(capacity, 
+//                           growthRate, 
+//                           shrinkPercThreshold, 
+//                           shrinkPercThreshold);
+//}
+//
+//DynArray* JCDDA_Construct4(int capacity, double growthRate, 
+//                           double shrinkPercThreshold, 
+//                           double shrinkPercentage) {
+//    assert(capacity >= 0);
+//    assert(growthRate >= 1.0);
+//    assert(shrinkPercThreshold >= 0.0 && shrinkPercThreshold <= 1.0);
+//    assert(shrinkPercentage >= 0.0 && shrinkPercentage <= 1.0 &&
+//           shrinkPercentage >= shrinkPercThreshold);
+//
+//    DynArray *this = (DynArray*)malloc(sizeof(DynArray) * 1);
+//    if (this == NULL) { return NULL; }
+//
+//    if (capacity == 0) {
+//        this->values = NULL;
+//    } else {
+//        this->values = (HashMap**)malloc(sizeof(HashMap*) * capacity);
+//        if (this->values == NULL) {
+//            free(this);
+//            return NULL;
+//        }
+//    }
+//
+//    this->size = 0;
+//    this->capacity = capacity;
+//    this->growthRate = growthRate;
+//    this->shrinkPT = shrinkPercThreshold;
+//    this->shrinkPerc = shrinkPercentage;
+//
+//    return this;
+//}
+//
+//void JCDDA_Destruct(DynArray *this) {
+//    assert(this);
+//    free(this->values);
+//    free(this);
+//}
+//
+//HashMap** JCDDA_GetArray(const DynArray *this) {
+//    assert(this);
+//    return this->values;
+//}
+//
+//int JCDDA_GetSize(const DynArray *this) {
+//    assert(this);
+//    return this->size;
+//}
+//
+//bool JCDDA_SetSize(DynArray *this, int size) {
+//    assert(this);
+//    assert(size >= 0);
+//
+//    if (size > this->capacity) {
+//        // Try to expand
+//        int newCapacity = (int)(this->capacity * this->growthRate);
+//        if (newCapacity == this->capacity) { newCapacity = this->capacity + 1; }
+//
+//        HashMap **newArray = (HashMap**) realloc(
+//            this->values, sizeof(HashMap*) * newCapacity);
+//
+//        if (newArray == NULL) { return false; }
+//
+//        this->capacity = newCapacity;
+//        this->values = newArray;
+//    } else if (size < (int)(this->capacity * this->shrinkPT)) {
+//        // Try to contract if the new size is less than threshold of capacity
+//        // It's okay if it (somehow) fails to shrink, we can still use it.
+//        int newCapacity = (int)(this->capacity * this->shrinkPT);
+//        HashMap **newArray = (HashMap**) realloc(
+//            this->values, sizeof(HashMap*) * newCapacity);
+//
+//        if (newArray != NULL) {
+//            this->capacity = newCapacity;
+//            this->values = newArray;
+//        }
+//    }
+//
+//    this->size = size;
+//
+//    return true;
+//}
+//
+//bool JCDDA_IncrSize(DynArray *this, int amt) {
+//    assert(this);
+//    return JCDDA_SetSize(this, this->size + amt);
+//}
+//
+//bool JCDDA_DecrSize(DynArray *this, int amt) {
+//    assert(this);
+//    return JCDDA_SetSize(this, this->size - amt);
+//}
 

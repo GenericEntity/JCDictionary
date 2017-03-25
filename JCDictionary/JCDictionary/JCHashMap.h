@@ -7,11 +7,15 @@ bool JCHM_Add(HashMap *map, char key, HashMap *value);
 
 void JCHM_Clear(HashMap *map);
 
+void JCHM_ClearAndDestructItems(HashMap *map);
+
 HashMap* JCHM_Construct(void);
 
 bool JCHM_Contains(const HashMap *map, char key);
 
 void JCHM_Destruct(HashMap *map);
+
+void JCHM_DestructWithItems(HashMap *map);
 
 HashMap *JCHM_Get(const HashMap *map, char key);
 

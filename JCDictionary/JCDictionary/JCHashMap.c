@@ -8,15 +8,18 @@ typedef struct JCHashMap HashMap;
 typedef struct JCLinkedList List;
 bool JCLL_Add(List *list, KeyValuePair *item);
 void JCLL_Clear(List *list);
+void JCLL_ClearAndDestructItems(List *list, void(*kvpDestructor)(KeyValuePair *kvp));
 List* JCLL_Construct(void);
 bool JCLL_Contains(const List *list, KeyValuePair *item);
 bool JCLL_ContainsKey(const List *list, char key);
 void JCLL_Destruct(List *list);
+void JCLL_DestructWithItems(List *list, void(*kvpDestructor)(KeyValuePair *kvp));
 void JCLL_Foreach(const List *list, void(*action)(KeyValuePair *item));
 KeyValuePair *JCLL_GetByKey(const List *list, char key);
 int JCLL_GetCount(const List *list);
 bool JCLL_IsEmpty(const List *list);
 bool JCLL_RemoveByKey(List *list, char key);
+
 
 
 typedef struct JCHashMapKeyValuePair {
@@ -66,6 +69,16 @@ void JCHM_Clear(HashMap *map) {
     }
 }
 
+void JCHM_ClearAndDestructItems(HashMap *map) {
+    assert(map);
+
+    // Recursively destruct all buckets and items
+    int i;
+    for (i = 0; i < _countof(map->buckets); ++i) {
+        JCLL_ClearAndDestructItems(map->buckets[i], _JCHM_DestructKVP);
+    }
+}
+
 HashMap* JCHM_Construct(void) {
 	HashMap *map = (HashMap*)malloc(sizeof(HashMap) * 1);
 	if (map == NULL) { return NULL; }
@@ -110,6 +123,18 @@ void JCHM_Destruct(HashMap *map) {
 	}
 
 	free(map);
+}
+
+void JCHM_DestructWithItems(HashMap *map) {
+    assert(map);
+
+    // Recursively destruct all buckets and items
+    int i;
+    for (i = 0; i < _countof(map->buckets); ++i) {
+        JCLL_DestructWithItems(map->buckets[i], _JCHM_DestructKVP);
+    }
+
+    free(map);
 }
 
 HashMap* JCHM_Get(const HashMap *map, char key) {
@@ -213,6 +238,12 @@ void JCLL_Destruct(List *list) {
     free(list);
 }
 
+void JCLL_DestructWithItems(List *list, void(*kvpDestructor)(KeyValuePair *kvp)) {
+    assert(list);
+    JCLL_ClearAndDestructItems(list, kvpDestructor);
+    free(list);
+}
+
 bool JCLL_Add(List *list, KeyValuePair *item) {
     assert(list);
 
@@ -272,6 +303,27 @@ void JCLL_Clear(List *list) {
     while (node != NULL) {
         // Keep a handle on the next node
         next = node->next;
+        // Destroy the node (replace with function if more complicated)
+        free(node);
+        // Move on to the next node
+        node = next;
+    }
+
+    list->head = NULL;
+    list->count = 0;
+}
+
+void JCLL_ClearAndDestructItems(List *list, void(*kvpDestructor)(KeyValuePair *kvp)) {
+    Node *node = list->head;
+    Node *next;
+
+    while (node != NULL) {
+        // Keep a handle on the next node
+        next = node->next;
+        // Destruct the Hash Map at this node
+        JCHM_DestructWithItems(node->value->value);
+        // Destroy internal key-value pair
+        kvpDestructor(node->value);
         // Destroy the node (replace with function if more complicated)
         free(node);
         // Move on to the next node

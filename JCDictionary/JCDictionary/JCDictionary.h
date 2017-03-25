@@ -11,9 +11,9 @@ void JCD_Destruct(Dictionary *this);
 
 bool JCD_AddWord(Dictionary *this, const char *word);
 
-bool JCD_RemoveWord(Dictionary *this, char *word);
+bool JCD_RemoveWord(Dictionary *this, const char *word);
 
-bool JCD_ContainsWord(const Dictionary *this, char *word);
+bool JCD_ContainsWord(const Dictionary *this, const char *word);
 
 int JCD_GetCount(const Dictionary *this);
 
