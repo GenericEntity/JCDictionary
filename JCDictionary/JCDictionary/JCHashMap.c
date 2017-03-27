@@ -18,7 +18,7 @@ void JCLL_Foreach(const List *list, void(*action)(KeyValuePair *item));
 KeyValuePair *JCLL_GetByKey(const List *list, char key);
 int JCLL_GetCount(const List *list);
 bool JCLL_IsEmpty(const List *list);
-bool JCLL_RemoveByKey(List *list, char key);
+bool JCLL_RemoveByKey(List *list, char key, void(*kvpDestructor)(KeyValuePair *kvp));
 
 
 
@@ -174,7 +174,12 @@ bool JCHM_Remove(HashMap *map, char key) {
     assert(map);
 
     int index = _JCHM_GetIndex(map, key);
-    return JCLL_RemoveByKey(map->buckets[index], key);
+    return JCLL_RemoveByKey(map->buckets[index], key, _JCHM_DestructKVP);
+}
+
+bool JCHM_IsEmpty(const HashMap *map) {
+	assert(map);
+	return JCHM_GetCount(map) == 0;
 }
 
 
@@ -266,7 +271,7 @@ bool JCLL_Add(List *list, KeyValuePair *item) {
     return true;
 }
 
-bool JCLL_RemoveByKey(List *list, char key) {
+bool JCLL_RemoveByKey(List *list, char key, void(*kvpDestructor)(KeyValuePair *kvp)) {
     assert(list);
 
     Node *node = list->head;
@@ -279,7 +284,10 @@ bool JCLL_RemoveByKey(List *list, char key) {
             Node *next = node->next;
             if (prev != NULL) {
                 prev->next = next;
-            }
+			} else {
+				list->head = NULL;
+			}
+			kvpDestructor(node->value);
             free(node);
             list->count--;
 

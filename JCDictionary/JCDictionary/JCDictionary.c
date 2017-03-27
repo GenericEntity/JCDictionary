@@ -122,8 +122,65 @@ bool JCD_RemoveWord(Dictionary *this, const char *word) {
     assert(this);
     assert(word);
 
-    //this->wordCount--;
-    return false;
+	if (!JCD_ContainsWord(this, word)) { return false; }
+
+	int wordLen = strlen(word);
+	int arrLength = wordLen + 1; // +1 to make space for head node
+
+	HashMap **nodes = (HashMap**)malloc(arrLength * sizeof(HashMap*));
+	if (nodes == NULL) { return false; }
+	// Letters corresponding to nodes
+	char *letters = (char*)malloc(arrLength * sizeof(char));
+	if (letters == NULL) {
+		free(nodes);
+		return false;
+	}
+
+	// Traverse down the hashmap tree, caching each node corresponding
+	// to a char in word.
+	const char *c = word;
+	HashMap *node = this->head;
+
+	// Special case: first is head node. letters[0] is ignored.
+	nodes[0] = this->head;
+	int i = 1;
+
+	while (*c != '\0') {
+		node = JCHM_Get(node, *c);
+		nodes[i] = node;
+		letters[i] = *c;
+		// JCD_ContainsWord should guarantee that all nodes are present
+		assert(node);
+		i++;
+		c++;
+	}
+
+
+	i = arrLength - 1;
+
+	// Unmark last node
+	JCHM_SetIsEndOfWord(nodes[i], false);
+	// If last node is empty, it's not part of another word, 
+	// so we have nodes to remove
+	if (JCHM_IsEmpty(nodes[i])) {
+		// i > 0 because we ignore the head node at index 0.
+		while (i > 0) {
+			// If node has no children and is unmarked
+			if (JCHM_IsEmpty(nodes[i]) && !JCHM_IsEndOfWord(nodes[i])) {
+				// nodes[i - 1] is nodes[i]'s parent
+				JCHM_Remove(nodes[i - 1], letters[i]);
+				JCHM_Destruct(nodes[i]);
+				i--;
+			} else {
+				break;
+			}
+		}
+	}
+
+	free(nodes);
+	free(letters);
+    this->wordCount--;
+    return true;
 }
 
 bool JCD_ContainsWord(const Dictionary *this, const char *word) {

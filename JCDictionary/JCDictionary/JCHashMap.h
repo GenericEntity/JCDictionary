@@ -27,3 +27,5 @@ void JCHM_SetIsEndOfWord(HashMap *map, bool isEndOfWord);
 
 bool JCHM_Remove(HashMap *map, char key);
 
+bool JCHM_IsEmpty(const HashMap *map);
+

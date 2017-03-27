@@ -24,6 +24,22 @@ int main(void)
     printf("Contains He: %d\n", JCD_ContainsWord(dict, "He"));
     printf("Contains Hell: %d\n", JCD_ContainsWord(dict, "Hell"));
 
+	printf("Remove Hello: %d\n", JCD_RemoveWord(dict, "Hello"));
+	printf("Contains Hello: %d\n", JCD_ContainsWord(dict, "Hello"));
+	printf("Contains Hey: %d\n", JCD_ContainsWord(dict, "Hey"));
+	printf("Contains He: %d\n", JCD_ContainsWord(dict, "He"));
+	printf("Contains Hell: %d\n", JCD_ContainsWord(dict, "Hell"));
+	printf("Remove Hello: %d\n", JCD_RemoveWord(dict, "Hello"));
+	printf("Contains Hello: %d\n", JCD_ContainsWord(dict, "Hello"));
+	printf("Contains Hey: %d\n", JCD_ContainsWord(dict, "Hey"));
+	printf("Contains He: %d\n", JCD_ContainsWord(dict, "He"));
+	printf("Contains Hell: %d\n", JCD_ContainsWord(dict, "Hell"));
+	printf("Adding Hello: %d\n", JCD_AddWord(dict, "Hello"));
+	printf("Contains Hello: %d\n", JCD_ContainsWord(dict, "Hello"));
+	printf("Contains Hey: %d\n", JCD_ContainsWord(dict, "Hey"));
+	printf("Contains He: %d\n", JCD_ContainsWord(dict, "He"));
+	printf("Contains Hell: %d\n", JCD_ContainsWord(dict, "Hell"));
+
     JCD_Clear(dict);
     printf("Cleared dictionary.\n");
 
